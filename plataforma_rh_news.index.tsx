@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Eye, EyeOff, Star, Trash2, Edit3, CheckCircle, LogOut, Plus, Link as LinkIcon, MessageSquare, ArrowRight, Newspaper, Sparkles, Check } from 'lucide-react';
+import { 
+  Eye, EyeOff, Star, Trash2, Edit3, CheckCircle, 
+  LogOut, Plus, Link as LinkIcon, MessageSquare, 
+  ArrowRight, Newspaper, Sparkles, Check 
+} from 'lucide-react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, onSnapshot, doc, setDoc, addDoc, deleteDoc } from 'firebase/firestore';
@@ -14,7 +18,7 @@ const COLORS = {
 
 // Injetando as fontes do Google Fonts
 const fontStyles = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;600;700;900&display=swap');
   
   .font-title { font-family: 'Inter', sans-serif; }
   .font-body { font-family: 'Inter', sans-serif; }
@@ -27,8 +31,17 @@ const fontStyles = `
   }
 `;
 
-// --- CONFIGURAÇÃO DO BANCO DE DADOS EM NUVEM ---
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+// --- CONFIGURAÇÃO DO BANCO DE DADOS EM NUVEM (FIREBASE) ---
+const firebaseConfig = {
+  apiKey: "AIzaSyDjkQvOgOClV7T1_kYQUgad_5_aaQ7-F_Q",
+  authDomain: "avalie-rh-news.firebaseapp.com",
+  projectId: "avalie-rh-news",
+  storageBucket: "avalie-rh-news.firebasestorage.app",
+  messagingSenderId: "578422633995",
+  appId: "1:578422633995:web:ce98089ed34a83e7d6790e"
+};
+
+// Inicializa as instâncias do Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -95,7 +108,6 @@ export default function App() {
   const handleSaveNews = async (news) => {
     if (!user) return;
     
-    // Cria um ID bonito (slug) baseado no Mês/Ano (ex: "Julho 2026" vira "julho-2026")
     const generateSlug = (text) => {
       return text.toString().toLowerCase()
         .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // Remove acentos
@@ -104,7 +116,6 @@ export default function App() {
         .replace(/(^-|-$)/g, ''); // Tira hifen do começo ou do fim
     };
     
-    // Se a edição já tem ID usa ele, senão gera o slug. Se falhar, gera um aleatório curto.
     const id = news.id || generateSlug(news.monthYear) || Date.now().toString(36); 
     
     await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'newsletters', id), { ...news, id });
@@ -240,19 +251,14 @@ function ModeratorDashboard({ newsletters, onSaveNews, onDeleteNews, evaluations
   const [copiedId, setCopiedId] = useState(null);
 
   const handleCopyLink = (id) => {
-    // Pega a URL base
     let baseUrl = window.location.href.split('?')[0].split('#')[0];
     
-    // TRUQUE PARA O SIMULADOR: 
-    // Se estivermos testando no ambiente isolado (blob ou usercontent), forçamos 
-    // um domínio fictício amigável para você ver como ficará na vida real.
     if (baseUrl.includes('blob:') || baseUrl.includes('usercontent')) {
       baseUrl = 'https://rhnews.vende-c.com/';
     }
     
     const url = `${baseUrl}?edition=${id}`;
     
-    // Método seguro e invisível de cópia compatível com todos os navegadores
     const textArea = document.createElement("textarea");
     textArea.value = url;
     textArea.style.position = "fixed";
@@ -264,7 +270,7 @@ function ModeratorDashboard({ newsletters, onSaveNews, onDeleteNews, evaluations
     try {
       document.execCommand('copy');
       setCopiedId(id);
-      setTimeout(() => setCopiedId(null), 3000); // Remove o feedback após 3 segundos
+      setTimeout(() => setCopiedId(null), 3000);
     } catch (err) {
       console.error('Falha ao copiar', err);
     }
@@ -273,7 +279,6 @@ function ModeratorDashboard({ newsletters, onSaveNews, onDeleteNews, evaluations
 
   return (
     <div className="pb-20">
-      {/* CAPA COM IMAGEM VENDE-C ESCURECIDA */}
       <div className="relative w-full h-[40vh] min-h-[350px] flex flex-col items-center justify-center text-center overflow-hidden bg-[#111]">
         <div 
           className="absolute inset-0 bg-cover bg-center z-0"
@@ -364,7 +369,6 @@ function ModeratorDashboard({ newsletters, onSaveNews, onDeleteNews, evaluations
                   </div>
                   
                   <div className="flex gap-3 w-full md:w-auto flex-wrap md:flex-nowrap">
-                    {/* Botão de Copiar Link da Edição */}
                     {news.status === 'published' && (
                       <button 
                         onClick={() => handleCopyLink(news.id)} 
@@ -403,7 +407,7 @@ function ModeratorDashboard({ newsletters, onSaveNews, onDeleteNews, evaluations
 }
 
 // ==========================================
-// FORMULÁRIO DE CRIAÇÃO/EDIÇÃO (ACEITA COPIAR/COLAR)
+// FORMULÁRIO DE CRIAÇÃO/EDIÇÃO
 // ==========================================
 function EditorForm({ initialData, onSave, onCancel }) {
   const [title, setTitle] = useState(initialData?.title || '');
@@ -472,7 +476,6 @@ function EditorForm({ initialData, onSave, onCancel }) {
           <span className="text-xs text-gray-300 bg-white/10 px-2 py-1 rounded">Copie e cole do seu e-mail (Textos, Imagens, etc)</span>
         </label>
         
-        {/* ÁREA MÁGICA: Permite colar HTML/Imagens ricas */}
         <div 
           ref={editorRef}
           className="w-full min-h-[350px] max-h-[700px] overflow-y-auto bg-[#1a1a1a] text-white p-6 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-[#FF0055] content-editor"
@@ -570,22 +573,19 @@ function EvaluationsPanel({ newsletters, evaluations }) {
   );
 }
 
-
 // ==========================================
 // TELA PÚBLICA / COLABORADOR (PARA AVALIAR)
 // ==========================================
 function CollaboratorView({ newsletters, evaluations, onSubmitEval }) {
   const publishedNews = newsletters.filter(n => n.status === 'published');
   
-  // Lê o ID da edição que está na URL (agora usando parâmetro seguro ?edition=123)
   const [selectedId, setSelectedId] = useState(() => {
     const params = new URLSearchParams(window.location.search);
     const idFromQuery = params.get('edition');
-    const idFromHash = window.location.hash.replace('#', ''); // Mantém suporte ao antigo por segurança
+    const idFromHash = window.location.hash.replace('#', '');
     return idFromQuery || idFromHash || null;
   });
 
-  // Escuta mudanças no histórico para suportar o botão "Voltar" do navegador
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
@@ -595,13 +595,11 @@ function CollaboratorView({ newsletters, evaluations, onSubmitEval }) {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // Define qual edição mostrar (a do link, ou a mais recente se não tiver link)
   let currentNews = publishedNews.find(n => n.id === selectedId);
   if (!currentNews && publishedNews.length > 0) {
-    currentNews = publishedNews[publishedNews.length - 1]; // Pega a última por padrão
+    currentNews = publishedNews[publishedNews.length - 1];
   }
 
-  // Lista de outras edições para a seção final (todas menos a que está aberta)
   const otherNews = publishedNews.filter(n => n.id !== currentNews?.id).reverse();
 
   const [rating, setRating] = useState(null);
@@ -611,7 +609,6 @@ function CollaboratorView({ newsletters, evaluations, onSubmitEval }) {
   const [submitted, setSubmitted] = useState(false);
   const [showEval, setShowEval] = useState(false);
 
-  // Zera o formulário se mudar de edição
   useEffect(() => {
     setRating(null);
     setName('');
@@ -632,7 +629,6 @@ function CollaboratorView({ newsletters, evaluations, onSubmitEval }) {
     );
   }
 
-  // Média para o colaborador ver
   const newsEvals = evaluations.filter(e => e.newsletterId === currentNews.id);
   const avgRating = newsEvals.length > 0 
     ? (newsEvals.reduce((acc, curr) => acc + curr.rating, 0) / newsEvals.length).toFixed(1) 
@@ -665,7 +661,6 @@ function CollaboratorView({ newsletters, evaluations, onSubmitEval }) {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white pb-20 font-body">
-      {/* HEADER NAVBAR - NOVO VISUAL */}
       <header className="bg-[#050505] border-b border-gray-900 px-6 py-4 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
@@ -680,14 +675,11 @@ function CollaboratorView({ newsletters, evaluations, onSubmitEval }) {
         </div>
       </header>
 
-      {/* HERO SECTION - TELA DE RECEPÇÃO */}
       <div className="relative w-full border-b border-gray-900 overflow-hidden bg-[#111]">
-        {/* Imagem de Fundo Vende-C */}
         <div 
           className="absolute inset-0 bg-cover bg-center z-0 scale-105"
           style={{ backgroundImage: "url('vende-c.jpg')" }}
         >
-          {/* Reduzi a opacidade do preto para a imagem aparecer bem atrás do texto */}
           <div className="absolute inset-0 bg-black/50"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/60 to-transparent"></div>
         </div>
@@ -717,12 +709,8 @@ function CollaboratorView({ newsletters, evaluations, onSubmitEval }) {
       </div>
 
       <main className="max-w-6xl mx-auto px-6 mt-16">
-        
-        {/* CONTEÚDO E AVALIAÇÃO */}
         {showEval && (
           <div id="avaliacao-section" className="mb-24 animate-fade-in scroll-mt-24">
-            
-            {/* BLOCO DE AVALIAÇÃO */}
             <section className="bg-[#111] rounded-2xl shadow-2xl overflow-hidden mb-12 border border-gray-800">
               <div className="bg-[#050505] p-8 text-white border-b border-gray-800">
                 <h2 className="text-3xl font-bold text-white mb-2">Avalie esta edição</h2>
@@ -743,8 +731,6 @@ function CollaboratorView({ newsletters, evaluations, onSubmitEval }) {
                   </div>
                 ) : (
                   <form onSubmit={handleSubmit} className="space-y-8">
-                    
-                    {/* Notas 0 a 10 */}
                     <div className="text-center">
                       <label className="block font-bold text-gray-300 mb-6 uppercase tracking-widest text-lg">
                         De 0 a 10, que nota você dá para esta edição?
@@ -812,7 +798,6 @@ function CollaboratorView({ newsletters, evaluations, onSubmitEval }) {
               </div>
             </section>
 
-            {/* CONTEÚDO DA NEWSLETTER ABAIXO DA AVALIAÇÃO */}
             <section id="conteudo" className="bg-[#111] p-6 md:p-12 rounded-2xl shadow-xl border border-gray-800 mt-12">
               <div className="mb-10 border-b-2 border-gray-800 pb-6 text-left">
                 <p className="text-[#FF0055] uppercase tracking-widest text-sm font-bold mb-2">Conteúdo da Edição</p>
@@ -831,7 +816,6 @@ function CollaboratorView({ newsletters, evaluations, onSubmitEval }) {
           </div>
         )}
 
-        {/* SEÇÃO ARQUIVO / OUTRAS EDIÇÕES */}
         {otherNews.length > 0 && (
           <section className="mb-24 pt-10 border-t border-gray-800">
             <div className="flex items-center gap-4 mb-8">
@@ -866,7 +850,6 @@ function CollaboratorView({ newsletters, evaluations, onSubmitEval }) {
             </div>
           </section>
         )}
-
       </main>
     </div>
   );
